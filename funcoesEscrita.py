@@ -21,7 +21,7 @@ class FunClass():
 		if(ckSkeleton):
 			out +=" extends \\Skeleton{"
 		elif(ckSkeletonV2):
-			out +=" extends \\SkeletonV2{"
+			out +=" extends \\SkeletonV3{"
 		else:
 			out +=" {"
 			
@@ -31,7 +31,7 @@ class FunClass():
 	### __construtct ### COMPLETO
 	def criarConstruct(self,tabela,alias,primaryKey,entidade):
 
-		out = self.identacaoFuncao+"public function  __construct($db,\FUN $FUN = null){" +"\n"
+		out = self.identacaoFuncao+"public function  __construct($db,\FUN $FUN){" +"\n"
 		#out += self.identacaoMiolo+"$dbInfo = parse_ini_file(__DIR__.'/dbInfo.ini');" +"\n" +"\n"
 
 		out += self.identacaoMiolo+"$this->NAMESPACE = __NAMESPACE__;" +"\n"
@@ -51,7 +51,7 @@ class FunClass():
 
 	### GET BY ID ### COMPLETO
 	def criarGetById(self,getById,ckEntidade):
-		out = self.identacaoFuncao+"public function getById($obj,$returnAsObj=false){" +"\n"
+		out = self.identacaoFuncao+"public function getById($obj,$returnAsObj=true){" +"\n"
 	
 		if(ckEntidade):
 			out += self.identacaoMiolo+"if($returnAsObj){" +"\n"		
@@ -62,7 +62,7 @@ class FunClass():
 			out += self.identacaoMiolo+"if(!$obj){" +"\n"
 			out += self.identacaoMiolo+ self.t+"if(gettype($result) == 'object'){" +"\n"
 			out += self.identacaoMiolo+ self.t+ self.t+"$result->erro = 1;" +"\n"
-			out += self.identacaoMiolo+ self.t+ self.t+"$result->mensagem = 'parametro veio vazio';" +"\n"
+			out += self.identacaoMiolo+ self.t+ self.t+"$result->setMensagem('parametro veio vazio');" +"\n"
 			out += self.identacaoMiolo+ self.t+"}" +"\n"
 			out += self.identacaoMiolo+ self.t+"return $result;" +"\n"
 			out += self.identacaoMiolo+"}" +"\n" +"\n"
@@ -81,7 +81,7 @@ class FunClass():
 			out += self.identacaoMiolo+"if(!$id){" +"\n"
 			out += self.identacaoMiolo+ self.t+ "if(gettype($result) == 'object'){" +"\n"
 			out += self.identacaoMiolo+ self.t+ self.t+ "$result->erro = 1;" +"\n"
-			out += self.identacaoMiolo+ self.t+ self.t+ "$result->mensagem = 'id não numerico';" +"\n"
+			out += self.identacaoMiolo+ self.t+ self.t+ "$result->setMensagem('id não numerico');" +"\n"
 			out += self.identacaoMiolo+ self.t+ "}" +"\n"
 			out += self.identacaoMiolo+ self.t+ "return $result;" +"\n"
 			out += self.identacaoMiolo+"}" +"\n" +"\n"
@@ -97,7 +97,7 @@ class FunClass():
 		
 		out += self.identacaoMiolo+ "$param = $select.$from.$where;" +"\n" +"\n"
 		
-		out += self.identacaoMiolo+ "if($this->DBG) echo $param;" +"\n"
+		out += self.identacaoMiolo+ "if($this->DBG) debug($param,false,false);" +"\n"
 		out += self.identacaoMiolo+"$sql = $this->db->query($param);" +"\n"
 		out += self.identacaoMiolo+"$rw = $this->db->fetch($sql);" +"\n" +"\n"
 
@@ -120,7 +120,7 @@ class FunClass():
 		out += self.identacaoMiolo+"$obj2 = $this->getNewEntity();" +"\n"
 		out += self.identacaoMiolo+"if(!$obj){" +"\n"
 		out += self.identacaoMiolo+"    $obj2->erro = 1;" +"\n"
-		out += self.identacaoMiolo+"    $obj2->mensagem = 'obj vazio';" +"\n" 
+		out += self.identacaoMiolo+"    $obj2->setMensagem('obj vazio');" +"\n"
 		out += self.identacaoMiolo+"}else if($this->testarEntidade($obj,$this->NAMESPACE,array('array')) ){" +"\n"
 		out += formata1
 		out += self.identacaoMiolo+"}else{" +"\n"
@@ -133,19 +133,23 @@ class FunClass():
 		out += self.identacaoFuncao+"}" +"\n" +"\n"
 		return out
 
-	### INSERIR ### INCOMPLETA [falta o prepare]
+	### INSERIR ### COMPLETA
 	def criarInserir(self,insere,insereV,resultado):
-		out = self.identacaoFuncao+"public function inserir($obj,$returnAsObj=false){"+"\n"
+		out = self.identacaoFuncao+"public function inserir($obj){"+"\n"
 		out += self.identacaoMiolo+"if($this->testarEntidade($obj,$this->NAMESPACE,array('array')) ){" +"\n"
 		out += self.identacaoMiolo+"    $result = $obj;" +"\n"
 		out += self.identacaoMiolo+"}else{" +"\n"
 		out += self.identacaoMiolo+"    $result = $this->getNewEntity();" +"\n"
-		out += self.identacaoMiolo+"    $result = $result->arrayToObject($rw,$result);" +"\n"
-		out += self.identacaoMiolo+"}" +"\n"
-		out += self.identacaoMiolo+"$resultInt = 0;" +"\n" +"\n"		
+		out += self.identacaoMiolo+"    $result = $result->arrayToObject($obj,$result);" +"\n"
+		out += self.identacaoMiolo+"}" +"\n" +"\n"
 
-		out += self.identacaoMiolo+"$obj = $this->formatar($obj);" +"\n"
-		out += self.identacaoMiolo+"if(isset($obj->{$this->ID}) and $this->getById($obj->{$this->ID})) return $this->atualizar($obj);" +"\n" +"\n"
+		out += self.identacaoMiolo+"$obj = $this->formatar($result);" +"\n" +"\n"
+		out += self.identacaoMiolo+"if(isset($obj->{$this->ID})){" +"\n"
+		out += self.identacaoMiolo+"    $_ent = $this->getById($obj->{$this->ID});" +"\n"
+		out += self.identacaoMiolo+"    if($this->testaEntidadeVazia($_ent)){" +"\n"
+		out += self.identacaoMiolo+"        return $this->atualizar($obj);" +"\n"
+		out += self.identacaoMiolo+"    }" +"\n"
+		out += self.identacaoMiolo+"}" +"\n" +"\n"
 
 		#out += self.identacaoMiolo+"$obj->"+insereFirstElement+" = $this->getNextId();" +"\n" +"\n"
 
@@ -155,68 +159,76 @@ class FunClass():
 		out += insereV[:-2] +"\n"
 		out += self.identacaoMiolo+ self.t+ self.t+")\";" +"\n" +"\n"
 		
-		out += self.identacaoMiolo+"if($this->DBG) echo $param;"+"\n"
+		out += self.identacaoMiolo+"if($this->DBG) debug($param,false,false);"+"\n"
 		#print(resultado)
 		if(resultado.prepare):
 			if (len(resultado.prepare[0]) > 1):
-				out += self.identacaoMiolo+"$pepares = array(\""+resultado.prepare[0]+"\",array("+resultado.prepare[1]+") ); //array('s',$texto);"+"\n"
+				out += self.identacaoMiolo+"$pepares = array('"+resultado.prepare[0]+"',array("+resultado.prepare[1]+") ); //array('s',$texto);"+"\n"
 			else:
-			    out += self.identacaoMiolo+"$pepares = array(\""+resultado.prepare[0]+"\","+resultado.prepare[1]+"); //array('s',$texto);"+"\n"
+			    out += self.identacaoMiolo+"$pepares = array('"+resultado.prepare[0]+"',"+resultado.prepare[1]+"); //array('s',$texto);"+"\n"
 		else:
 			out += self.identacaoMiolo+"$pepares = array(); //array('s',$texto);"+"\n"
+		out += self.identacaoMiolo+"if($this->DBG) debug($pepares,false,false);"+"\n"
 		out += self.identacaoMiolo+"if($this->db->query($param,$pepares)){" +"\n"
+		out += self.identacaoMiolo+"    if($this->DBG) echo \" Executou \";" +"\n"
 		out += self.identacaoMiolo+"    $result->erro = 0;" +"\n"
-		out += self.identacaoMiolo+"    $result->mensagem = 'Salvo';" +"\n"
+		out += self.identacaoMiolo+"    $result->setMensagem('Salvo');" +"\n"
 		out += self.identacaoMiolo+"    $result->{$this->ID} = $this->db->con->insert_id;" +"\n"
-		out += self.identacaoMiolo+"    $resultInt = $this->db->con->insert_id;" +"\n"
+		out += self.identacaoMiolo+"}else{" +"\n"
+		out += self.identacaoMiolo+"    if($this->DBG) echo \" FALHA INSERIR \";" +"\n"
+		out += self.identacaoMiolo+"    $result->erro = 1;" +"\n"
+		out += self.identacaoMiolo+"    $result->setMensagem('FALHA INSERIR');" +"\n"
 		out += self.identacaoMiolo+"}" +"\n" +"\n"
-		
-		out += self.identacaoMiolo+"if($returnAsObj){" +"\n"
-		out += self.identacaoMiolo+"    return $result;" +"\n"
-		out += self.identacaoMiolo+"}" +"\n"
-		out += self.identacaoMiolo+"return $resultInt;" +"\n"
-		
+
+		out += self.identacaoMiolo+"return $result;" +"\n"
+
 		out += self.identacaoFuncao+"}" +"\n" +"\n"
 		return out
 
-	### Atualizar ### INCOMPLETA [falta o prepare]
+	### Atualizar ### COMPLETA
 	def criarAtualizar(self,atualizar,primaryKey,resultado):
-		out = self.identacaoFuncao+"public function atualizar($obj,$returnAsObj=false){"+"\n"		
+		out = self.identacaoFuncao+"public function atualizar($obj){"+"\n"
 		out += self.identacaoMiolo+"if($this->testarEntidade($obj,$this->NAMESPACE,array('array')) ){" +"\n"
 		out += self.identacaoMiolo+"    $result = $obj;" +"\n"
 		out += self.identacaoMiolo+"}else{" +"\n"
 		out += self.identacaoMiolo+"    $result = $this->getNewEntity();" +"\n"
-		out += self.identacaoMiolo+"    $result = $result->arrayToObject($rw,$result);" +"\n"
-		out += self.identacaoMiolo+"}" +"\n"
-		out += self.identacaoMiolo+"$resultInt = 0;" +"\n" +"\n"
+		out += self.identacaoMiolo+"    $result = $result->arrayToObject($obj,$result);" +"\n"
+		out += self.identacaoMiolo+"}" +"\n" +"\n"
 
-		out += self.identacaoMiolo+"$obj = $this->formatar($obj);" +"\n"
-		out += self.identacaoMiolo+"if(!isset($obj->{$this->ID}) or !$this->getById($obj->{$this->ID})) return $this->inserir($obj);" +"\n" +"\n"
+		out += self.identacaoMiolo+"$obj = $this->formatar($result);" +"\n" +"\n"
+		out += self.identacaoMiolo+"if(isset($obj->{$this->ID})){" +"\n"
+		out += self.identacaoMiolo+"    $_ent = $this->getById($obj->{$this->ID});" +"\n"
+		out += self.identacaoMiolo+"    if(!$this->testaEntidadeVazia($_ent)){" +"\n"
+		out += self.identacaoMiolo+"        return $this->inserir($obj);" +"\n"
+		out += self.identacaoMiolo+"    }" +"\n"
+		out += self.identacaoMiolo+"}" +"\n" +"\n"
 
 		out += self.identacaoMiolo+"$param = \"UPDATE $this->SCHEMA.$this->TABELA SET" +"\n"
 		out += atualizar[:-2] +"\n"
 		out += self.identacaoMiolo+ self.t+ self.t+"WHERE $this->ID = $obj->"+primaryKey+"\";" +"\n" +"\n"
 
-		out += self.identacaoMiolo+"if($this->DBG) echo $param;"+"\n"
+		out += self.identacaoMiolo+"if($this->DBG) debug($param,false,false);"+"\n"
 		#print(resultado)
 		if(resultado.prepare):
 			if (len(resultado.prepare[0]) > 1):
-				out += self.identacaoMiolo+"$pepares = array(\""+resultado.prepare[0]+"\",array("+resultado.prepare[1]+") ); //array('s',$texto);"+"\n"
+				out += self.identacaoMiolo+"$pepares = array('"+resultado.prepare[0]+"',array("+resultado.prepare[1]+") ); //array('s',$texto);"+"\n"
 			else:
-			    out += self.identacaoMiolo+"$pepares = array(\""+resultado.prepare[0]+"\","+resultado.prepare[1]+"); //array('s',$texto);"+"\n"
+			    out += self.identacaoMiolo+"$pepares = array('"+resultado.prepare[0]+"',"+resultado.prepare[1]+"); //array('s',$texto);"+"\n"
 		else:
 			out += self.identacaoMiolo+"$pepares = array(); //array('s',$texto);"+"\n"
+		out += self.identacaoMiolo+"if($this->DBG) debug($pepares,false,false);"+"\n"
 		out += self.identacaoMiolo+"if($this->db->query($param,$pepares)){" +"\n"
+		out += self.identacaoMiolo+"    if($this->DBG) echo \" Atualizou \";" +"\n"
 		out += self.identacaoMiolo+"    $result->erro = 0;" +"\n"
-		out += self.identacaoMiolo+"    $result->mensagem = 'Atualizado';" +"\n"		
-		out += self.identacaoMiolo+"    $resultInt = $obj->{$this->ID};" +"\n"
+		out += self.identacaoMiolo+"    $result->setMensagem('Atualizado');" +"\n"
+		out += self.identacaoMiolo+"}else{" +"\n"
+		out += self.identacaoMiolo+"    if($this->DBG) echo \" FALHA ATUALIZAR \";" +"\n"
+		out += self.identacaoMiolo+"    $result->erro = 1;" +"\n"
+		out += self.identacaoMiolo+"    $result->setMensagem('FALHA ATUALIZAR');" +"\n"
 		out += self.identacaoMiolo+"}" +"\n" +"\n"
-		
-		out += self.identacaoMiolo+"if($returnAsObj){" +"\n"
-		out += self.identacaoMiolo+"    return $result;" +"\n"
-		out += self.identacaoMiolo+"}" +"\n"
-		out += self.identacaoMiolo+"return $resultInt;" +"\n"
-		
+
+		out += self.identacaoMiolo+"return $result;" +"\n"
+
 		out += self.identacaoFuncao+"}" +"\n" +"\n"
 		return out
 
@@ -268,13 +280,13 @@ class FunClass():
 		out += self.identacaoMiolo+ self.t+ self.t+ "break;" +"\n"
 		out += self.identacaoMiolo+"}" + "\n"				
 		out += self.identacaoMiolo+"return $ordenar;" +"\n"		
-		out += self.identacaoFuncao+"}" +"\n" +"\n"
+		out += self.identacaoFuncao+"}" +"\n" #+"\n"
 		return out
 	
 	### rodape CLASS ### COMPLETO
 	def rodape(self, classe):
-		out = "}" +"\n" +"\n"
+		out = "}" # +"\n" +"\n"
 
-		out +="$"+classe+" = new "+classe+"($db,$FUN);"
+		#out +="$"+classe+" = new "+classe+"($db,$FUN);"
 				
 		return out	
